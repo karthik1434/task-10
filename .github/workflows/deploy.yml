@@ -1,0 +1,45 @@
+name: Deploy to ECS Blue/Green
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image
+        env:
+          ECR_REPO: strapi-app-karthik
+        run: |
+          docker build -t $ECR_REPO:${{ github.sha }} .
+          docker tag $ECR_REPO:${{ github.sha }} 118273046134.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:${{ github.sha }}
+          docker push 118273046134.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:${{ github.sha }}
+
+      - name: Register ECS Task Definition
+        run: |
+          sed "s|<IMAGE_URI>|118273046134.dkr.ecr.us-east-1.amazonaws.com/strapi-app-karthik:${{ github.sha }}|g" task-definition.json > new-task-def.json
+          TASK_DEF_ARN=$(aws ecs register-task-definition --cli-input-json file://new-task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "TASK_DEF_ARN=$TASK_DEF_ARN" >> $GITHUB_ENV
+
+      - name: Trigger CodeDeploy Deployment
+        run: |
+          sed "s|<TASK_DEFINITION_ARN>|$TASK_DEF_ARN|g" appspec.json > new-appspec.json
+          aws deploy create-deployment \
+            --application-name strapi-app-karthik-codedeploy-app \
+            --deployment-group-name strapi-app-karthik-deployment-group \
+            --deployment-config-name CodeDeployDefault.ECSCanary10Percent5Minutes \
+            --revision revisionType=AppSpecContent,appSpecContent="{\"content\":\"$(base64 new-appspec.json | tr -d '\n')\"}"

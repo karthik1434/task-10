@@ -1,0 +1,23 @@
+{
+    "family": "strapi-task",
+    "containerDefinitions": [
+      {
+        "name": "strapi-app-karthik-container",
+        "image": "<IMAGE_URI>",
+        "portMappings": [
+          {
+            "containerPort": 1337,
+            "protocol": "tcp"
+          }
+        ],
+        "essential": true
+      }
+    ],
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "256",
+    "memory": "512",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "<ECS_EXECUTION_ROLE_ARN>",
+    "taskRoleArn": "<ECS_TASK_ROLE_ARN>"
+  }
+  
