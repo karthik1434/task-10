@@ -25,7 +25,7 @@ jobs:
         env:
           ECR_REPO: strapi-app-karthik
         run: |
-          docker build -t $ECR_REPO:${{ github.sha }} .
+          docker build -t $ECR_REPO:${{ github.sha }} -f docker/Dockerfile .
           docker tag $ECR_REPO:${{ github.sha }} 118273046134.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:${{ github.sha }}
           docker push 118273046134.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:${{ github.sha }}
 
