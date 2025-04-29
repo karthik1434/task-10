@@ -41,7 +41,7 @@ jobs:
 
       - name: Trigger CodeDeploy Deployment
         run: |
-          sed "s|<TASK_DEFINITION_ARN>|$TASK_DEF_ARN|g" appspec.json > new-appspec.json|cat new-appspec.json
+          sed "s|<TASK_DEFINITION_ARN>|$TASK_DEF_ARN|g" appspec.json > new-appspec.json
           ENCODED_APP_SPEC=$(base64 new-appspec.json | tr -d '\n')
           aws deploy create-deployment \
             --application-name strapi-app-karthik-codedeploy-app \
