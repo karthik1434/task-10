@@ -35,15 +35,19 @@ jobs:
           TASK_DEF_ARN=$(aws ecs register-task-definition --cli-input-json file://new-task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
           echo "TASK_DEF_ARN=$TASK_DEF_ARN" >> $GITHUB_ENV
 
+      - name: Validate appspec.json
+        run: |
+          jq . appspec.json  # Check for valid JSON, will error if invalid
+
       - name: Trigger CodeDeploy Deployment
         run: |
-          sed "s|<TASK_DEFINITION_ARN>|$TASK_DEF_ARN|g" appspec.json > new-appspec.json
+          sed "s|<TASK_DEFINITION_ARN>|$TASK_DEF_ARN|g" appspec.json > new-appspec.json|cat new-appspec.json
           ENCODED_APP_SPEC=$(base64 new-appspec.json | tr -d '\n')
           aws deploy create-deployment \
             --application-name strapi-app-karthik-codedeploy-app \
             --deployment-group-name strapi-app-karthik-deployment-group \
             --deployment-config-name CodeDeployDefault.ECSCanary10Percent5Minutes \
-            --revision "revisionType=AppSpecContent,appSpecContent={\"content\":\"$ENCODED_APP_SPEC\"}"
+            --revision "revisionType=AppSpecContent,appSpecContent=$ENCODED_APP_SPEC"
         
       - name: Wait for 5 minutes after deployment
         if: always()
