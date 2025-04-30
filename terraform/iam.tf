@@ -36,10 +36,7 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
   role       = aws_iam_role.ecs_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
-resource "aws_iam_role" "codedeploy_role" {
-  name = "CodeDeployRole"
-  assume_role_policy = data.aws_iam_policy_document.codedeploy_assume.json
-}
+
 
 data "aws_iam_policy_document" "codedeploy_assume" {
   statement {
@@ -49,4 +46,9 @@ data "aws_iam_policy_document" "codedeploy_assume" {
       identifiers = ["codedeploy.amazonaws.com"]
     }
   }
+}
+
+resource "aws_iam_role" "codedeploy_role" {
+  name = "CodeDeployRole"
+  assume_role_policy = data.aws_iam_policy_document.codedeploy_assume.json
 }
