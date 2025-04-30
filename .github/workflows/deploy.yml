@@ -50,6 +50,7 @@ jobs:
       - name: Terraform Init & Apply
         if: steps.check-cluster.outputs.ecs_exists == 'false'
         run: |
+          cd terraform
           terraform init
           terraform apply -auto-approve
   
