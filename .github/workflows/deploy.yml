@@ -1,8 +1,8 @@
 name: Deploy to ECS Blue/Green
 
-on:
-  push:
-    branches: [main]
+#on:
+  #push:
+    #branches: [main]
 
 jobs:
   deploy:
@@ -28,6 +28,34 @@ jobs:
           docker build -t $ECR_REPO:${{ github.sha }} -f docker/Dockerfile .
           docker tag $ECR_REPO:${{ github.sha }} 118273046134.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:${{ github.sha }}
           docker push 118273046134.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:${{ github.sha }}
+
+
+      #run terraform command only if ecs cluster not available
+
+      - name: Check if ECS cluster is running
+        id: check-cluster
+        run: |
+          STATUS=$(aws ecs describe-clusters --clusters strapi-app-karthik --query 'clusters[0].status' --output text || echo "MISSING")
+          echo "Cluster status: $STATUS"
+          if [ "$STATUS" = "ACTIVE" ]; then
+            echo "ecs_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "ecs_exists=false" >> $GITHUB_OUTPUT
+          fi
+  
+      - name: Setup Terraform
+        if: steps.check-cluster.outputs.ecs_exists == 'false'
+        uses: hashicorp/setup-terraform@v3
+  
+      - name: Terraform Init & Apply
+        if: steps.check-cluster.outputs.ecs_exists == 'false'
+        run: |
+          terraform init
+          terraform apply -auto-approve
+  
+
+
+
 
       - name: Register ECS Task Definition
         run: |
