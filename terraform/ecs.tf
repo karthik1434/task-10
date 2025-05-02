@@ -8,8 +8,8 @@ resource "aws_ecs_task_definition" "app" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.cpu
   memory                   = var.memory
-  execution_role_arn       = aws_iam_role.ecs_execution_role.arn
-  
+  execution_role_arn = data.aws_iam_role.ecs_execution_role.arn  # Use the existing ECS execution role ARN
+  task_role_arn      = data.aws_iam_role.codedeploy_role.arn      # Use the existing CodeDeploy role ARN
 
   container_definitions = jsonencode([{
     name      = "${var.app_name}-container"
