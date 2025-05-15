@@ -10,6 +10,8 @@ WORKDIR /app
 # Clone Strapi
 RUN git clone https://github.com/karthik1434/task-8.git .
 
+WORKDIR /app/strapi-karthik
+
 # Install dependencies using npm
 RUN npm install
 
